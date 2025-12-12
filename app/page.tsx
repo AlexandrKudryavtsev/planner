@@ -4,86 +4,23 @@ import { useState } from 'react';
 import Room3D from './components/Room3D';
 import TopView from './components/TopView';
 import ControlsPanel from './components/ControlsPanel';
-import { Furniture, Room, ViewMode } from './types';
-
-const INITIAL_ROOM: Room = {
-  width: 800,
-  depth: 600,
-  height: 280,
-  furniture: [
-    {
-      id: '1',
-      name: 'Диван',
-      type: 'rectangular',
-      position: { x: 100, y: 0, z: 100 },
-      dimensions: { x: 200, y: 80, z: 80 },
-      color: '#8B4513',
-      rotation: 45
-    },
-    {
-      id: '2',
-      name: 'Стол',
-      type: 'cube',
-      position: { x: 400, y: 0, z: 300 },
-      dimensions: { x: 100, y: 75, z: 100 },
-      color: '#D2691E',
-      rotation: 0
-    },
-    {
-      id: '3',
-      name: 'Шкаф',
-      type: 'rectangular',
-      position: { x: 600, y: 0, z: 50 },
-      dimensions: { x: 60, y: 200, z: 120 },
-      color: '#696969',
-      rotation: 90
-    }
-  ]
-};
+import { ViewMode } from './types';
+import { useFurniture } from './hooks/useFurniture';
+import { useRoom } from './hooks/useRoom';
 
 export default function Home() {
-  const [room, setRoom] = useState<Room>(INITIAL_ROOM);
   const [viewMode, setViewMode] = useState<ViewMode>('3d');
-  const [selectedFurniture, setSelectedFurniture] = useState<string | null>(null);
 
-  const handleAddFurniture = (type: 'cube' | 'rectangular') => {
-    const newFurniture: Furniture = {
-      id: Date.now().toString(),
-      name: `${type === 'cube' ? 'Куб' : 'Параллелепипед'} ${room.furniture.length + 1}`,
-      type,
-      position: { x: 100, y: 0, z: 100 },
-      dimensions: type === 'cube'
-        ? { x: 80, y: 80, z: 80 }
-        : { x: 120, y: 60, z: 80 },
-      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      rotation: 0
-    };
-
-    setRoom(prev => ({
-      ...prev,
-      furniture: [...prev.furniture, newFurniture]
-    }));
-    setSelectedFurniture(newFurniture.id);
-  };
-
-  const handleUpdateFurniture = (id: string, updates: Partial<Furniture>) => {
-    setRoom(prev => ({
-      ...prev,
-      furniture: prev.furniture.map(item =>
-        item.id === id ? { ...item, ...updates } : item
-      )
-    }));
-  };
-
-  const handleDeleteFurniture = (id: string) => {
-    setRoom(prev => ({
-      ...prev,
-      furniture: prev.furniture.filter(item => item.id !== id)
-    }));
-    if (selectedFurniture === id) {
-      setSelectedFurniture(null);
-    }
-  };
+  const {
+    room,
+    selectedFurniture,
+    selectedItem,
+    handleAddFurniture,
+    handleUpdateFurniture,
+    handleDeleteFurniture,
+    setSelectedFurniture
+  } = useFurniture();
+  const { handleUpdateRoomDimensions } = useRoom();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
@@ -137,10 +74,11 @@ export default function Home() {
           <ControlsPanel
             room={room}
             selectedFurniture={selectedFurniture}
+            selectedItem={selectedItem}
             onAddFurniture={handleAddFurniture}
             onUpdateFurniture={handleUpdateFurniture}
             onDeleteFurniture={handleDeleteFurniture}
-            setRoom={setRoom}
+            onUpdateRoomDimensions={handleUpdateRoomDimensions}
           />
         </div>
       </div>

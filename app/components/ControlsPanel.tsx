@@ -1,42 +1,25 @@
 'use client';
 
-import { useState } from 'react';
 import { Room, Furniture } from '../types';
 
 interface ControlsPanelProps {
   room: Room;
   selectedFurniture: string | null;
+  selectedItem: Furniture | undefined;
   onAddFurniture: (type: 'cube' | 'rectangular') => void;
   onUpdateFurniture: (id: string, updates: Partial<Furniture>) => void;
   onDeleteFurniture: (id: string) => void;
-  setRoom: (room: Room) => void;
+  onUpdateRoomDimensions: (dimension: 'width' | 'depth' | 'height', value: number) => void;
 }
 
 export default function ControlsPanel({
   room,
-  selectedFurniture,
+  selectedItem,
   onAddFurniture,
   onUpdateFurniture,
   onDeleteFurniture,
-  setRoom
+  onUpdateRoomDimensions
 }: ControlsPanelProps) {
-  const selectedItem = room.furniture.find(f => f.id === selectedFurniture);
-  const [roomDimensions, setRoomDimensions] = useState({
-    width: room.width,
-    depth: room.depth,
-    height: room.height
-  });
-
-  const handleRoomDimensionChange = (dimension: 'width' | 'depth' | 'height', value: number) => {
-    const newDimensions = { ...roomDimensions, [dimension]: value };
-    setRoomDimensions(newDimensions);
-    
-    setRoom({
-      ...room,
-      [dimension]: value
-    });
-  };
-
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 h-full">
       <h2 className="text-xl font-bold text-gray-800 mb-6">Управление</h2>
@@ -56,13 +39,13 @@ export default function ControlsPanel({
                 min="100"
                 max="1000"
                 step="10"
-                value={roomDimensions[dim]}
-                onChange={(e) => handleRoomDimensionChange(dim, parseInt(e.target.value))}
+                value={room[dim]}
+                onChange={(e) => onUpdateRoomDimensions(dim, parseInt(e.target.value))}
                 className="w-full"
               />
               <div className="flex justify-between text-sm">
                 <span>100</span>
-                <span className="font-medium">{roomDimensions[dim]} см</span>
+                <span className="font-medium">{room[dim]} см</span>
                 <span>1000</span>
               </div>
             </div>
@@ -90,7 +73,7 @@ export default function ControlsPanel({
         {selectedItem && (
           <div className="border-t pt-4 space-y-4">
             <h3 className="font-semibold text-gray-700">Редактирование: {selectedItem.name}</h3>
-            
+
             <div className="space-y-3">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Название</label>
