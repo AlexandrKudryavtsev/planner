@@ -120,8 +120,13 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     furnitureRefs.current.clear();
 
     // Очищаем комнату
-    cleanupSceneHelper(sceneRef.current, rendererRef.current, containerRef.current, roomMeshesRef.current);
+    roomMeshesRef.current.forEach(mesh => {
+      sceneRef.current?.remove(mesh);
+      disposeMesh(mesh);
+    });
     roomMeshesRef.current = [];
+
+    cleanupSceneHelper(sceneRef.current, rendererRef.current, containerRef.current, []);
   };
 
   // Инициализация
@@ -169,8 +174,11 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
   const recreateRoom = () => {
     if (!sceneRef.current) return;
 
-    // Удаляем старую комнату
-    cleanupSceneHelper(sceneRef.current, null, null, roomMeshesRef.current);
+    // Удаляем старую комнату из сцены
+    roomMeshesRef.current.forEach(mesh => {
+      sceneRef.current!.remove(mesh);
+      disposeMesh(mesh);
+    });
     roomMeshesRef.current = [];
 
     // Создаем новую комнату

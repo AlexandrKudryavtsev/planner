@@ -77,23 +77,21 @@ export const cleanupScene = (
     container: HTMLDivElement | null,
     meshes: THREE.Mesh[] = []
 ) => {
-    if (!scene || !renderer || !container) return;
+    if (!scene) return;
 
-    // Удаляем все mesh'ы
     meshes.forEach(mesh => {
         scene.remove(mesh);
         disposeMesh(mesh);
     });
 
-    // Удаляем рендерер из DOM
-    const canvas = renderer.domElement;
-    if (canvas.parentNode === container) {
-        container.removeChild(canvas);
-    }
+    if (renderer && container) {
+        const canvas = renderer.domElement;
+        if (canvas.parentNode === container) {
+            container.removeChild(canvas);
+        }
 
-    // Освобождаем ресурсы рендерера
-    renderer.dispose();
-    renderer.forceContextLoss();
+        renderer.dispose();
+    }
 };
 
 /**
