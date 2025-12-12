@@ -8,18 +8,6 @@ import * as THREE from 'three';
 export const createRoomMesh = (room: Room, wallThickness = 5) => {
     const meshes: THREE.Mesh[] = [];
 
-    // Пол
-    const floorGeometry = new THREE.PlaneGeometry(room.width, room.depth);
-    const floorMaterial = new THREE.MeshLambertMaterial({
-        color: 0xcccccc,
-        side: THREE.DoubleSide
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.set(room.width / 2, 0, room.depth / 2);
-    floor.receiveShadow = true;
-    meshes.push(floor);
-
     // Материал для стен
     const wallMaterial = new THREE.MeshLambertMaterial({
         color: 0xaaaaaa,
@@ -68,10 +56,17 @@ export const createRoomMesh = (room: Room, wallThickness = 5) => {
         meshes.push(mesh);
     });
 
-    // Сетка
-    const gridSize = Math.max(room.width, room.depth);
-    const gridHelper = new THREE.GridHelper(gridSize, 20, 0x888888, 0x888888);
-    gridHelper.position.set(room.width / 2, 0.1, room.depth / 2);
+    // Сетка (пол) - делаем на 20% больше комнаты
+    const margin = 0.2; // 20% запас
+    const gridSize = Math.max(room.width, room.depth) * (1 + margin);
+    const gridHelper = new THREE.GridHelper(
+        gridSize,
+        20,
+        0x888888,
+        0x888888
+    );
+    // Опускаем сетку чуть ниже (y = -0.1), чтобы стены стояли на ней
+    gridHelper.position.set(room.width / 2, -0.1, room.depth / 2);
     meshes.push(gridHelper as unknown as THREE.Mesh);
 
     return meshes;
@@ -98,9 +93,10 @@ export const createFurnitureMesh = (
 
     const mesh = new THREE.Mesh(geometry, material);
 
+    // Мебель стоит на сетке (y = 0 для начала координат мебели)
     mesh.position.set(
         furniture.position.x + furniture.dimensions.x / 2,
-        furniture.dimensions.y / 2,
+        furniture.dimensions.y / 2, // Центр по высоте находится на половине высоты мебели
         furniture.position.z + furniture.dimensions.z / 2
     );
 
@@ -114,6 +110,38 @@ export const createFurnitureMesh = (
     }
 
     return mesh;
+};
+
+/**
+ * Обновляет существующий mesh мебели
+ */
+export const updateFurnitureMesh = (
+    mesh: THREE.Mesh,
+    furniture: Furniture,
+    isSelected: boolean
+) => {
+    // Обновляем позицию
+    mesh.position.set(
+        furniture.position.x + furniture.dimensions.x / 2,
+        furniture.dimensions.y / 2, // Центр по высоте
+        furniture.position.z + furniture.dimensions.z / 2
+    );
+
+    // Обновляем вращение
+    mesh.rotation.y = furniture.rotation * (Math.PI / 180);
+
+    // Обновляем материал (цвет и прозрачность)
+    updateMeshMaterial(mesh, furniture, isSelected);
+
+    // Обновляем контур выбора
+    if (isSelected) {
+        const existingLine = mesh.children.find(child => child instanceof THREE.LineSegments);
+        if (!existingLine) {
+            addSelectionOutline(mesh);
+        }
+    } else {
+        removeSelectionOutline(mesh);
+    }
 };
 
 /**
@@ -139,38 +167,6 @@ export const removeSelectionOutline = (mesh: THREE.Mesh) => {
         mesh.remove(line);
         line.geometry.dispose();
         (line.material as THREE.LineBasicMaterial).dispose();
-    }
-};
-
-/**
- * Обновляет существующий mesh мебели
- */
-export const updateFurnitureMesh = (
-    mesh: THREE.Mesh,
-    furniture: Furniture,
-    isSelected: boolean
-) => {
-    // Обновляем позицию
-    mesh.position.set(
-        furniture.position.x + furniture.dimensions.x / 2,
-        furniture.dimensions.y / 2,
-        furniture.position.z + furniture.dimensions.z / 2
-    );
-
-    // Обновляем вращение
-    mesh.rotation.y = furniture.rotation * (Math.PI / 180);
-
-    // Обновляем материал (цвет и прозрачность)
-    updateMeshMaterial(mesh, furniture, isSelected);
-
-    // Обновляем контур выбора
-    if (isSelected) {
-        const existingLine = mesh.children.find(child => child instanceof THREE.LineSegments);
-        if (!existingLine) {
-            addSelectionOutline(mesh);
-        }
-    } else {
-        removeSelectionOutline(mesh);
     }
 };
 
