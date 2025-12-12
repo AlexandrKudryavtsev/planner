@@ -19,11 +19,17 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
   const controlsRef = useRef<OrbitControls | null>(null);
   const furnitureRefs = useRef<Map<string, THREE.Mesh>>(new Map());
   const roomRefs = useRef<THREE.Mesh[]>([]);
+  const raycasterRef = useRef<THREE.Raycaster | null>(null);
+  const animationFrameId = useRef<number>(0);
 
-  useEffect(() => {
+  // Инициализация
+  const initScene = () => {
     if (!containerRef.current) return;
 
-    // Инициализация сцены
+    // Очистка предыдущей сцены
+    cleanupScene();
+
+    // Создание новой сцены
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
     sceneRef.current = scene;
@@ -35,7 +41,6 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
       0.1,
       5000
     );
-    // Позиционируем камеру так, чтобы видеть всю комнату
     camera.position.set(room.width * 0.5, room.height * 1.5, room.depth * 2);
     camera.lookAt(room.width * 0.5, room.height * 0.5, room.depth * 0.5);
     cameraRef.current = camera;
@@ -57,6 +62,9 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     controls.maxDistance = 2000;
     controlsRef.current = controls;
 
+    // Raycaster для кликов
+    raycasterRef.current = new THREE.Raycaster();
+
     // Освещение
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
@@ -68,71 +76,78 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
-    // Создание комнаты
+    // Создание комнаты и мебели
     createRoom(scene, room);
+    createAllFurniture(scene);
+
+    // Обработчик кликов
+    renderer.domElement.addEventListener('click', handleCanvasClick);
 
     // Анимация
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameId.current = requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
     };
     animate();
+  };
 
-    const handleResize = () => {
-      if (!containerRef.current || !camera || !renderer) return;
-      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    };
-    window.addEventListener('resize', handleResize);
+  // Создание всей мебели
+  const createAllFurniture = (scene: THREE.Scene) => {
+    furnitureRefs.current.clear();
+    room.furniture.forEach(furniture => {
+      const mesh = createFurnitureMesh(furniture, selectedFurniture === furniture.id);
+      furnitureRefs.current.set(furniture.id, mesh);
+      scene.add(mesh);
+    });
+  };
 
-    const handleClick = (event: MouseEvent) => {
-      if (!camera || !renderer || !scene) return;
+  // Обработчик клика по канвасу
+  const handleCanvasClick = (event: MouseEvent) => {
+    if (!cameraRef.current || !rendererRef.current || !sceneRef.current || !raycasterRef.current) return;
 
-      const mouse = new THREE.Vector2();
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    const mouse = new THREE.Vector2();
+    const rect = rendererRef.current.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
+    raycasterRef.current.setFromCamera(mouse, cameraRef.current);
 
-      const furnitureMeshes = Array.from(furnitureRefs.current.values());
-      const intersects = raycaster.intersectObjects(furnitureMeshes);
+    // Получаем актуальные mesh объекты
+    const furnitureMeshes = Array.from(furnitureRefs.current.values());
+    const intersects = raycasterRef.current.intersectObjects(furnitureMeshes);
 
-      if (intersects.length > 0) {
-        const mesh = intersects[0].object;
-        const furnitureId = Array.from(furnitureRefs.current.entries())
-          .find(([_, m]) => m === mesh)?.[0];
-        if (furnitureId) {
-          onSelectFurniture(furnitureId);
+    if (intersects.length > 0) {
+      const mesh = intersects[0].object;
+      // Находим ID мебели по mesh объекту
+      for (const [id, furnitureMesh] of furnitureRefs.current.entries()) {
+        if (furnitureMesh === mesh || furnitureMesh.children.includes(mesh)) {
+          onSelectFurniture(id);
+          return;
         }
-      } else {
-        onSelectFurniture(null);
       }
-    };
+    } else {
+      onSelectFurniture(null);
+    }
+  };
 
-    renderer.domElement.addEventListener('click', handleClick);
+  // Очистка сцены
+  const cleanupScene = () => {
+    // Останавливаем анимацию
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      renderer.domElement.removeEventListener('click', handleClick);
-      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-      roomRefs.current.forEach(mesh => mesh.geometry.dispose());
-    };
-  }, [onSelectFurniture, room]);
+    // Удаляем обработчик кликов
+    if (rendererRef.current) {
+      rendererRef.current.domElement.removeEventListener('click', handleCanvasClick);
+    }
 
-  // Обновление мебели при изменении
-  useEffect(() => {
-    if (!sceneRef.current || !room) return;
-
-    // Удаляем старую мебель
+    // Очищаем мебель
     furnitureRefs.current.forEach(mesh => {
-      sceneRef.current?.remove(mesh);
+      if (sceneRef.current) {
+        sceneRef.current.remove(mesh);
+      }
       mesh.geometry.dispose();
       if (Array.isArray(mesh.material)) {
         mesh.material.forEach(m => m.dispose());
@@ -142,17 +157,99 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     });
     furnitureRefs.current.clear();
 
-    // Добавляем новую мебель
-    room.furniture.forEach(furniture => {
-      const mesh = createFurnitureMesh(furniture, selectedFurniture === furniture.id);
-      furnitureRefs.current.set(furniture.id, mesh);
-      sceneRef.current?.add(mesh);
+    // Очищаем комнату
+    roomRefs.current.forEach(mesh => {
+      if (sceneRef.current) {
+        sceneRef.current.remove(mesh);
+      }
+      mesh.geometry.dispose();
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(m => m.dispose());
+      } else {
+        mesh.material.dispose();
+      }
     });
-  }, [room, room.furniture, selectedFurniture]);
+    roomRefs.current = [];
+
+    // Удаляем рендерер
+    if (containerRef.current && rendererRef.current) {
+      const canvas = rendererRef.current.domElement;
+      if (canvas.parentNode === containerRef.current) {
+        containerRef.current.removeChild(canvas);
+      }
+      rendererRef.current.dispose();
+    }
+  };
+
+  // Инициализация при монтировании
+  useEffect(() => {
+    initScene();
+
+    const handleResize = () => {
+      if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
+      cameraRef.current.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cleanupScene();
+    };
+  }, []); // Только при монтировании/размонтировании
+
+  // Обновление мебели при изменении комнаты или выбора
+  useEffect(() => {
+    if (!sceneRef.current) return;
+
+    // Обновляем существующую мебель
+    furnitureRefs.current.forEach((mesh, id) => {
+      const furniture = room.furniture.find(f => f.id === id);
+      if (!furniture) {
+        // Удаляем мебель, которой больше нет
+        sceneRef.current?.remove(mesh);
+        mesh.geometry.dispose();
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach(m => m.dispose());
+        } else {
+          mesh.material.dispose();
+        }
+        furnitureRefs.current.delete(id);
+      }
+    });
+
+    // Добавляем или обновляем мебель
+    room.furniture.forEach(furniture => {
+      const isSelected = selectedFurniture === furniture.id;
+      const existingMesh = furnitureRefs.current.get(furniture.id);
+
+      if (existingMesh) {
+        // Обновляем существующую мебель
+        updateFurnitureMesh(existingMesh, furniture, isSelected);
+      } else {
+        // Создаем новую мебель
+        const newMesh = createFurnitureMesh(furniture, isSelected);
+        furnitureRefs.current.set(furniture.id, newMesh);
+        sceneRef.current?.add(newMesh);
+      }
+    });
+  }, [room.furniture, selectedFurniture]);
 
   // Обновление комнаты при изменении размеров
   useEffect(() => {
-    if (!sceneRef.current || !room) return;
+    if (!sceneRef.current || !cameraRef.current) return;
+
+    // Обновляем камеру
+    cameraRef.current.position.set(room.width * 0.5, room.height * 1.5, room.depth * 2);
+    cameraRef.current.lookAt(room.width * 0.5, room.height * 0.5, room.depth * 0.5);
+
+    // Обновляем комнату
+    recreateRoom();
+  }, [room.width, room.depth, room.height]);
+
+  const recreateRoom = () => {
+    if (!sceneRef.current) return;
 
     // Удаляем старую комнату
     roomRefs.current.forEach(mesh => {
@@ -166,20 +263,14 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     });
     roomRefs.current = [];
 
-    // Обновляем камеру
-    if (cameraRef.current) {
-      cameraRef.current.position.set(room.width * 0.5, room.height * 1.5, room.depth * 2);
-      cameraRef.current.lookAt(room.width * 0.5, room.height * 0.5, room.depth * 0.5);
-    }
-
     // Создаем новую комнату
     createRoom(sceneRef.current, room);
-  }, [room.width, room.depth, room.height, room]);
+  };
 
   const createRoom = (scene: THREE.Scene, room: Room) => {
-    const wallThickness = 5; // Толщина стен для визуализации
+    const wallThickness = 5;
 
-    // 1. ПОЛ - исправленная позиция
+    // Пол
     const floorGeometry = new THREE.PlaneGeometry(room.width, room.depth);
     const floorMaterial = new THREE.MeshLambertMaterial({
       color: 0xcccccc,
@@ -187,12 +278,12 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
-    floor.position.set(room.width / 2, 0, room.depth / 2); // Центрируем пол
+    floor.position.set(room.width / 2, 0, room.depth / 2);
     floor.receiveShadow = true;
     scene.add(floor);
     roomRefs.current.push(floor);
 
-    // 2. Материал для стен
+    // Материал для стен
     const wallMaterial = new THREE.MeshLambertMaterial({
       color: 0xaaaaaa,
       transparent: true,
@@ -200,77 +291,33 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
       side: THREE.DoubleSide
     });
 
-    // 3. СТЕНЫ - позиционируем от пола
+    // Стены
+    const walls = [
+      { geometry: new THREE.PlaneGeometry(room.width, room.height), position: [room.width / 2, room.height / 2, 0], rotation: [0, 0, 0], offset: wallThickness / 2 },
+      { geometry: new THREE.PlaneGeometry(room.width, room.height), position: [room.width / 2, room.height / 2, room.depth], rotation: [0, Math.PI, 0], offset: -wallThickness / 2 },
+      { geometry: new THREE.PlaneGeometry(room.depth, room.height), position: [0, room.height / 2, room.depth / 2], rotation: [0, Math.PI / 2, 0], offset: wallThickness / 2 },
+      { geometry: new THREE.PlaneGeometry(room.depth, room.height), position: [room.width, room.height / 2, room.depth / 2], rotation: [0, -Math.PI / 2, 0], offset: -wallThickness / 2 },
+    ];
 
-    // Задняя стена (Z = 0)
-    const backWallGeometry = new THREE.PlaneGeometry(room.width, room.height);
-    const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
-    backWall.position.set(
-      room.width / 2,      // Центр по X
-      room.height / 2,     // Центр по Y (поднимаем от пола)
-      0                    // Передняя грань на Z=0
-    );
-    // Смещаем на половину толщины чтобы стена была видимой
-    backWall.position.z = wallThickness / 2;
-    backWall.receiveShadow = true;
-    scene.add(backWall);
-    roomRefs.current.push(backWall);
+    walls.forEach((wall, index) => {
+      const mesh = new THREE.Mesh(wall.geometry, wallMaterial);
+      mesh.position.set(
+        wall.position[0] + (index >= 2 ? wall.offset : 0),
+        wall.position[1],
+        wall.position[2] + (index < 2 ? wall.offset : 0)
+      );
+      mesh.rotation.set(wall.rotation[0], wall.rotation[1], wall.rotation[2]);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      roomRefs.current.push(mesh);
+    });
 
-    // Передняя стена (Z = room.depth)
-    const frontWallGeometry = new THREE.PlaneGeometry(room.width, room.height);
-    const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
-    frontWall.position.set(
-      room.width / 2,
-      room.height / 2,
-      room.depth
-    );
-    frontWall.position.z = room.depth - wallThickness / 2;
-    frontWall.rotation.y = Math.PI; // Разворачиваем на 180°
-    frontWall.receiveShadow = true;
-    scene.add(frontWall);
-    roomRefs.current.push(frontWall);
-
-    // Левая стена (X = 0)
-    const leftWallGeometry = new THREE.PlaneGeometry(room.depth, room.height);
-    const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
-    leftWall.position.set(
-      0,
-      room.height / 2,
-      room.depth / 2
-    );
-    leftWall.position.x = wallThickness / 2;
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.receiveShadow = true;
-    scene.add(leftWall);
-    roomRefs.current.push(leftWall);
-
-    // Правая стена (X = room.width)
-    const rightWallGeometry = new THREE.PlaneGeometry(room.depth, room.height);
-    const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
-    rightWall.position.set(
-      room.width,
-      room.height / 2,
-      room.depth / 2
-    );
-    rightWall.position.x = room.width - wallThickness / 2;
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.receiveShadow = true;
-    scene.add(rightWall);
-    roomRefs.current.push(rightWall);
-
-    // 4. СЕТКА - размещаем на уровне пола
+    // Сетка
     const gridSize = Math.max(room.width, room.depth);
     const gridHelper = new THREE.GridHelper(gridSize, 20, 0x888888, 0x888888);
     gridHelper.position.set(room.width / 2, 0.1, room.depth / 2);
     scene.add(gridHelper);
     roomRefs.current.push(gridHelper as THREE.Mesh);
-
-    // 5. Ось координат
-    const axesSize = Math.max(room.width, room.depth, room.height) / 2;
-    const axesHelper = new THREE.AxesHelper(axesSize);
-    axesHelper.position.set(room.width / 2, 0, room.depth / 2);
-    scene.add(axesHelper);
-    roomRefs.current.push(axesHelper as THREE.Mesh);
   };
 
   const createFurnitureMesh = (furniture: Furniture, isSelected: boolean) => {
@@ -288,10 +335,9 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
 
     const mesh = new THREE.Mesh(geometry, material);
 
-    // Позиционируем с учетом того, что мебель стоит на полу (Y = 0)
     mesh.position.set(
       furniture.position.x + furniture.dimensions.x / 2,
-      furniture.dimensions.y / 2, // Центр по высоте
+      furniture.dimensions.y / 2,
       furniture.position.z + furniture.dimensions.z / 2
     );
 
@@ -299,6 +345,7 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
+    // Добавляем контур для выбранного объекта
     if (isSelected) {
       const edges = new THREE.EdgesGeometry(geometry);
       const lineMaterial = new THREE.LineBasicMaterial({
@@ -310,6 +357,44 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
     }
 
     return mesh;
+  };
+
+  const updateFurnitureMesh = (mesh: THREE.Mesh, furniture: Furniture, isSelected: boolean) => {
+    // Обновляем позицию
+    mesh.position.set(
+      furniture.position.x + furniture.dimensions.x / 2,
+      furniture.dimensions.y / 2,
+      furniture.position.z + furniture.dimensions.z / 2
+    );
+
+    // Обновляем вращение
+    mesh.rotation.y = furniture.rotation * (Math.PI / 180);
+
+    // Обновляем материал (цвет и прозрачность)
+    if (Array.isArray(mesh.material)) {
+      mesh.material.forEach(m => {
+        if (m instanceof THREE.MeshLambertMaterial) {
+          m.color.set(isSelected ? 0xff0000 : parseInt(furniture.color.replace('#', '0x')));
+          m.opacity = isSelected ? 0.8 : 0.9;
+          m.transparent = true;
+        }
+      });
+    } else if (mesh.material instanceof THREE.MeshLambertMaterial) {
+      mesh.material.color.set(isSelected ? 0xff0000 : parseInt(furniture.color.replace('#', '0x')));
+      mesh.material.opacity = isSelected ? 0.8 : 0.9;
+      mesh.material.transparent = true;
+    }
+
+    // Обновляем контур выбора
+    const existingLine = mesh.children.find(child => child instanceof THREE.LineSegments);
+    if (isSelected && !existingLine) {
+      const edges = new THREE.EdgesGeometry(mesh.geometry);
+      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+      const line = new THREE.LineSegments(edges, lineMaterial);
+      mesh.add(line);
+    } else if (!isSelected && existingLine) {
+      mesh.remove(existingLine);
+    }
   };
 
   return (
