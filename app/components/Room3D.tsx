@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Room, Furniture } from '../types';
+import { Room, Furniture } from '@/types';
 
 interface Room3DProps {
   room: Room;

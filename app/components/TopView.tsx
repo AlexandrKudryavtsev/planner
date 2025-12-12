@@ -1,6 +1,6 @@
 'use client';
 
-import { Room } from '../types';
+import { Room } from '@/types';
 
 interface TopViewProps {
   room: Room;

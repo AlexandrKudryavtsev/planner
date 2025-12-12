@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import Room3D from './components/Room3D';
-import TopView from './components/TopView';
-import ControlsPanel from './components/ControlsPanel';
-import { ViewMode } from './types';
-import { useFurniture } from './hooks/useFurniture';
-import { useRoom } from './hooks/useRoom';
+import Room3D from '@/components/Room3D';
+import TopView from '@/components/TopView';
+import ControlsPanel from '@/components/ControlsPanel';
+import { ViewMode } from '@/types';
+import { useFurniture } from '@/hooks/useFurniture';
+import { useRoom } from '@/hooks/useRoom';
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('3d');

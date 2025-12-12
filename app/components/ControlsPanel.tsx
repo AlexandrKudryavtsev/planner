@@ -1,6 +1,6 @@
 'use client';
 
-import { Room, Furniture } from '../types';
+import { Room, Furniture } from '@/types';
 
 interface ControlsPanelProps {
   room: Room;

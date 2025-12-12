@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useRoomStore } from '../store/roomStore';
-import { Furniture } from '../types';
+import { useRoomStore } from '@/store/roomStore';
+import { Furniture } from '@/types';
 
 export const useFurniture = () => {
     const {

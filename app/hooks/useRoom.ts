@@ -1,4 +1,4 @@
-import { useRoomStore } from '../store/roomStore';
+import { useRoomStore } from '@/store/roomStore';
 
 export const useRoom = () => {
     const { room, updateRoomDimensions, setRoom, resetRoom } = useRoomStore();

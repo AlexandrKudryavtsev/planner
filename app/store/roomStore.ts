@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Room, Furniture } from '../types';
+import { Room, Furniture } from '@/types';
 
 interface RoomStore {
     room: Room;
