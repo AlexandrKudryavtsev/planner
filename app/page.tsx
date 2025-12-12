@@ -24,11 +24,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Планировщик мебели</h1>
-        <p className="text-gray-600 mt-2">Расставляйте мебель в 3D комнате</p>
-      </header>
-
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-3/4">
           <div className="bg-white rounded-xl shadow-lg p-4">
@@ -46,9 +41,6 @@ export default function Home() {
                 >
                   Вид сверху
                 </button>
-              </div>
-              <div className="text-sm text-gray-500">
-                Комната: {room.width}×{room.depth}×{room.height} см
               </div>
             </div>
 
