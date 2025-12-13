@@ -95,6 +95,8 @@ function createConditionerModel(): THREE.Object3D {
     frontCover.rotation.z += Math.PI;
     airConditioner.add(frontCover);
 
+    airConditioner.rotateZ(Math.PI / 2)
+
     return airConditioner;
 }
 
@@ -143,6 +145,7 @@ function createConditionerLowPolyModel(): THREE.Object3D {
     frontCover.rotation.z += Math.PI;
     airConditioner.add(frontCover);
 
+    airConditioner.rotateZ(Math.PI / 2)
     return airConditioner;
 }
 
@@ -235,6 +238,8 @@ function createChairModel(): THREE.Object3D {
     back.position.set(-0.025, 0.03, 0.75);
     chair.add(back);
 
+    chair.rotateX(Math.PI / 2)
+
     return chair;
 }
 
@@ -294,6 +299,8 @@ function createChairLowPolyModel(): THREE.Object3D {
     back.position.set(0.175, 0.1, 0.75);
     chair.add(back);
 
+    chair.rotateX(Math.PI / 2)
+
     return chair;
 }
 
@@ -307,15 +314,15 @@ export function createModelMesh(
 ): THREE.Object3D {
     const modelType = furniture.modelType || 'chair';
     const config = MODELS[modelType];
-    
+
     if (!config) {
         console.warn(`Model ${modelType} not found, using fallback`);
         return createFallbackModel(furniture, isSelected);
     }
 
     // Создаем модель
-    const model = isLowPoly && config.createLowPolyModel 
-        ? config.createLowPolyModel() 
+    const model = isLowPoly && config.createLowPolyModel
+        ? config.createLowPolyModel()
         : config.createModel();
 
     // Масштабируем к нужным размерам
@@ -344,7 +351,6 @@ export function createModelMesh(
         if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
-            
             // Применяем цвет, если это простой материал
             if (child.material instanceof THREE.MeshLambertMaterial) {
                 if (furniture.color && furniture.color !== '#000000') {
@@ -365,26 +371,26 @@ export function createModelMesh(
 
     // Создаем LOD систему
     const lod = new THREE.LOD();
-    
+
     // Высокополигональная модель для ближнего расстояния
-    const highPolyModel = isLowPoly && config.createLowPolyModel 
-        ? config.createLowPolyModel() 
+    const highPolyModel = isLowPoly && config.createLowPolyModel
+        ? config.createLowPolyModel()
         : config.createModel();
-        
+
     highPolyModel.scale.set(scaleX, scaleY, scaleZ);
     highPolyModel.rotation.y = furniture.rotation * (Math.PI / 180);
-    
+
     // Низкополигональная модель для дальнего расстояния
-    const lowPolyModel = config.createLowPolyModel 
-        ? config.createLowPolyModel() 
+    const lowPolyModel = config.createLowPolyModel
+        ? config.createLowPolyModel()
         : config.createModel();
-        
+
     lowPolyModel.scale.set(scaleX, scaleY, scaleZ);
     lowPolyModel.rotation.y = furniture.rotation * (Math.PI / 180);
 
     lod.addLevel(highPolyModel, 0);
-    lod.addLevel(lowPolyModel, 500);
-    
+    lod.addLevel(lowPolyModel, 1000);
+
     lod.position.copy(model.position);
 
     return lod;
