@@ -9,10 +9,9 @@ interface TopViewProps {
 }
 
 export default function TopView({ room, selectedFurniture, onSelectFurniture }: TopViewProps) {
-  const scale = 0.8; // Масштаб для отображения
+  const scale = 0.8;
 
   const handleBackgroundClick = (e: React.MouseEvent) => {
-    // Проверяем, был ли клик на фоне (не на мебели и не на легенде)
     const target = e.target as HTMLElement;
     const isFurniture = target.closest('[data-furniture]') !== null;
     const isLegend = target.closest('[data-legend]') !== null;
@@ -24,104 +23,76 @@ export default function TopView({ room, selectedFurniture, onSelectFurniture }: 
 
   return (
     <div
-      className="relative w-full h-full bg-gradient-to-b from-blue-50 to-gray-100"
+      className="relative w-full h-full bg-gradient-to-b from-blue-50 to-gray-100 flex items-center justify-center"
       onClick={handleBackgroundClick}
     >
-      {/* Комната */}
-      <div
-        className="absolute border-2 border-gray-800 bg-gradient-to-b from-gray-100 to-gray-200"
-        style={{
-          left: '10%',
-          top: '10%',
-          width: `${room.width * scale}px`,
-          height: `${room.depth * scale}px`,
-        }}
-      >
-        {/* Сетка */}
-        <div className="absolute inset-0 opacity-20">
-          {Array.from({ length: Math.floor(room.width / 100) }).map((_, i) => (
-            <div
-              key={`x-${i}`}
-              className="absolute w-px bg-gray-400 h-full"
-              style={{ left: `${(i + 1) * 100 * scale}px` }}
-            />
-          ))}
-          {Array.from({ length: Math.floor(room.depth / 100) }).map((_, i) => (
-            <div
-              key={`z-${i}`}
-              className="absolute h-px bg-gray-400 w-full"
-              style={{ top: `${(i + 1) * 100 * scale}px` }}
-            />
-          ))}
-        </div>
-
-        {/* Мебель */}
-        {room.furniture.map(furniture => {
-          const isSelected = selectedFurniture === furniture.id;
-
-          return (
-            <div
-              key={furniture.id}
-              data-furniture="true" // Добавляем data-атрибут для идентификации
-              className={`absolute cursor-pointer transition-all duration-200 ${isSelected ? 'ring-2 ring-red-500 ring-offset-2 z-10' : ''
-                }`}
-              style={{
-                left: `${furniture.position.x * scale}px`,
-                top: `${furniture.position.z * scale}px`,
-                width: `${furniture.dimensions.x * scale}px`,
-                height: `${furniture.dimensions.z * scale}px`,
-                transform: `rotate(${furniture.rotation}deg)`,
-                transformOrigin: 'center',
-                backgroundColor: furniture.color,
-                opacity: isSelected ? 0.9 : 0.8,
-              }}
-              onClick={(e) => {
-                e.stopPropagation(); // Останавливаем всплытие
-                onSelectFurniture(furniture.id);
-              }}
-            >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-medium text-white bg-black bg-opacity-50 px-2 py-1 rounded">
-                  {furniture.name}
-                </span>
-              </div>
-
-              {/* Размеры */}
-              <div className="absolute -top-6 left-0 text-xs text-gray-700 whitespace-nowrap">
-                {Math.round(furniture.dimensions.x)}×{Math.round(furniture.dimensions.z)} см
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Координаты */}
-        <div className="absolute -bottom-8 left-0 text-sm text-gray-600">
-          ← {room.width} см →
-        </div>
-        <div className="absolute -right-8 top-0 text-sm text-gray-600 transform -rotate-90 origin-center">
-          ↑ {room.depth} см ↓
-        </div>
-      </div>
-
-      {/* Легенда */}
-      <div
-        data-legend="true" // Добавляем data-атрибут для идентификации
-        className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md"
-        onClick={(e) => e.stopPropagation()} // Останавливаем всплытие в легенде
-      >
-        <h3 className="font-semibold text-gray-700 mb-2">Вид сверху</h3>
-        <div className="text-xs text-gray-600 space-y-1">
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-gray-800 mr-2" />
-            <span>Контур комнаты</span>
+      <div className="relative">
+        <div
+          className="relative border-2 border-gray-800 bg-gradient-to-b from-gray-100 to-gray-200"
+          style={{
+            width: `${room.width * scale}px`,
+            height: `${room.depth * scale}px`,
+          }}
+        >
+          <div className="absolute inset-0 opacity-20">
+            {Array.from({ length: Math.floor(room.width / 100) }).map((_, i) => (
+              <div
+                key={`x-${i}`}
+                className="absolute w-px bg-gray-400 h-full"
+                style={{ left: `${(i + 1) * 100 * scale}px` }}
+              />
+            ))}
+            {Array.from({ length: Math.floor(room.depth / 100) }).map((_, i) => (
+              <div
+                key={`z-${i}`}
+                className="absolute h-px bg-gray-400 w-full"
+                style={{ top: `${(i + 1) * 100 * scale}px` }}
+              />
+            ))}
           </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-gray-400 mr-2" />
-            <span>Сетка (100 см)</span>
+
+          {room.furniture.map(furniture => {
+            const isSelected = selectedFurniture === furniture.id;
+
+            return (
+              <div
+                key={furniture.id}
+                data-furniture="true"
+                className={`absolute cursor-pointer transition-all duration-200 ${isSelected ? 'ring-2 ring-red-500 ring-offset-2 z-10' : ''
+                  }`}
+                style={{
+                  left: `${furniture.position.x * scale}px`,
+                  top: `${furniture.position.z * scale}px`,
+                  width: `${furniture.dimensions.x * scale}px`,
+                  height: `${furniture.dimensions.z * scale}px`,
+                  transform: `rotate(${furniture.rotation}deg)`,
+                  transformOrigin: 'center',
+                  backgroundColor: furniture.color,
+                  opacity: isSelected ? 0.9 : 0.8,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectFurniture(furniture.id);
+                }}
+              >
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-medium text-white bg-black bg-opacity-50 px-2 py-1 rounded">
+                    {furniture.name}
+                  </span>
+                </div>
+
+                <div className="absolute -top-6 left-0 text-xs text-gray-700 whitespace-nowrap">
+                  {Math.round(furniture.dimensions.x)}×{Math.round(furniture.dimensions.z)} см
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="absolute -bottom-8 left-0 text-sm text-gray-600">
+            ← {room.width} см →
           </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-red-500 mr-2" />
-            <span>Выбранный объект</span>
+          <div className="absolute -right-8 top-0 text-sm text-gray-600 transform -rotate-90 origin-center">
+            ↑ {room.depth} см ↓
           </div>
         </div>
       </div>
