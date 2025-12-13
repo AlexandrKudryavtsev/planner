@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export', // Важно: экспорт статического сайта
-  basePath: process.env.NODE_ENV === 'production' ? '/planner' : '', // Название репозитория
+  output: 'export',
+  basePath: process.env.NODE_ENV === 'production' ? '/planner' : '',
   images: {
-    unoptimized: true, // Для GitHub Pages
+    unoptimized: true,
   },
-  trailingSlash: true, // Рекомендуется для GitHub Pages
+  trailingSlash: true,
 };
 
 export default nextConfig;

@@ -1,7 +1,7 @@
 import { Furniture } from '@/types';
 import * as THREE from 'three';
 import { createConditionerLowPolyModel, createConditionerModel } from './catalog/conditioner';
-import { createChairLowPolyModel, createChairModel } from './catalog/chair';
+import { createChairModel } from './catalog/chair';
 import { createFallbackModel } from './catalog/fallback';
 import { createModernRadiatorLowPolyModel, createModernRadiatorModel } from './catalog/modernRadiator';
 import { createOldRadiatorLowPolyModel, createOldRadiatorModel } from './catalog/oldRadiator';
@@ -31,7 +31,7 @@ export const MODELS: Record<string, ModelConfig> = {
         depth: 55,
         height: 50,
         createModel: createChairModel,
-        createLowPolyModel: createChairLowPolyModel
+        createLowPolyModel: createChairModel, // TODO: createChairLowPolyModel неправильно работает
     },
     modernRadiator: {
         name: 'Современный радиатор',
@@ -55,7 +55,7 @@ export const MODELS: Record<string, ModelConfig> = {
         depth: 20,
         height: 150,
         createModel: createBlackboardModel,
-        createLowPolyModel: createBlackboardLowPolyModel
+        createLowPolyModel: createBlackboardModel
     }
 };
 
