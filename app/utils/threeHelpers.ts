@@ -3,71 +3,68 @@ import * as THREE from 'three';
 import { createModelMesh } from '@/utils/modelManager';
 
 /**
- * Создает 3D комнату с полом, стенами и сеткой
+ * Создает 3D комнату с полом и двумя смежными стенами
  */
-export const createRoomMesh = (room: Room, wallThickness = 5) => {
+export const createRoomMesh = (room: Room, wallThickness = 15) => {
     const meshes: THREE.Mesh[] = [];
 
-    // Материал для стен
     const wallMaterial = new THREE.MeshLambertMaterial({
-        color: 0xaaaaaa,
-        transparent: true,
-        opacity: 0.5,
+        color: '#CFCFCF',
         side: THREE.DoubleSide
     });
 
-    // Стены
-    const walls = [
-        {
-            geometry: new THREE.PlaneGeometry(room.width, room.height),
-            position: [room.width / 2, room.height / 2, 0] as [number, number, number],
-            rotation: [0, 0, 0] as [number, number, number],
-            offset: wallThickness / 2
-        },
-        {
-            geometry: new THREE.PlaneGeometry(room.width, room.height),
-            position: [room.width / 2, room.height / 2, room.depth] as [number, number, number],
-            rotation: [0, Math.PI, 0] as [number, number, number],
-            offset: -wallThickness / 2
-        },
-        {
-            geometry: new THREE.PlaneGeometry(room.depth, room.height),
-            position: [0, room.height / 2, room.depth / 2] as [number, number, number],
-            rotation: [0, Math.PI / 2, 0] as [number, number, number],
-            offset: wallThickness / 2
-        },
-        {
-            geometry: new THREE.PlaneGeometry(room.depth, room.height),
-            position: [room.width, room.height / 2, room.depth / 2] as [number, number, number],
-            rotation: [0, -Math.PI / 2, 0] as [number, number, number],
-            offset: -wallThickness / 2
-        },
-    ];
-
-    walls.forEach((wall, index) => {
-        const mesh = new THREE.Mesh(wall.geometry, wallMaterial);
-        mesh.position.set(
-            wall.position[0] + (index >= 2 ? wall.offset : 0),
-            wall.position[1],
-            wall.position[2] + (index < 2 ? wall.offset : 0)
-        );
-        mesh.rotation.set(wall.rotation[0], wall.rotation[1], wall.rotation[2]);
-        mesh.receiveShadow = true;
-        meshes.push(mesh);
+    const floorMaterial = new THREE.MeshLambertMaterial({
+        color: '#A29983',
+        side: THREE.DoubleSide
     });
 
-    // Сетка (пол) - делаем на 20% больше комнаты
-    const margin = 0.2; // 20% запас
-    const gridSize = Math.max(room.width, room.depth) * (1 + margin);
-    const gridHelper = new THREE.GridHelper(
-        gridSize,
-        20,
-        0x888888,
-        0x888888
+    const floorGeometry = new THREE.PlaneGeometry(room.width, room.depth);
+    const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+    floorMesh.rotation.x = -Math.PI / 2; 
+    floorMesh.position.set(room.width / 2, 0, room.depth / 2);
+    floorMesh.receiveShadow = true;
+    meshes.push(floorMesh);
+
+    const backWallGeometry = new THREE.PlaneGeometry(room.width, room.height);
+    const backWallMesh = new THREE.Mesh(backWallGeometry, wallMaterial);
+    backWallMesh.position.set(
+        room.width / 2,
+        room.height / 2,
+        0
     );
-    // Опускаем сетку чуть ниже (y = -0.1), чтобы стены стояли на ней
-    gridHelper.position.set(room.width / 2, -0.1, room.depth / 2);
-    meshes.push(gridHelper as unknown as THREE.Mesh);
+    backWallMesh.receiveShadow = true;
+    meshes.push(backWallMesh);
+
+    const leftWallGeometry = new THREE.PlaneGeometry(room.depth, room.height);
+    const leftWallMesh = new THREE.Mesh(leftWallGeometry, wallMaterial);
+    leftWallMesh.position.set(
+        0,
+        room.height / 2,
+        room.depth / 2
+    );
+    leftWallMesh.rotation.y = Math.PI / 2;
+    leftWallMesh.receiveShadow = true;
+    meshes.push(leftWallMesh);
+
+    const wallThicknessGeometry = new THREE.BoxGeometry(wallThickness, room.height, room.depth);
+    const leftWallThicknessMesh = new THREE.Mesh(wallThicknessGeometry, wallMaterial);
+    leftWallThicknessMesh.position.set(
+        wallThickness / 2,
+        room.height / 2,
+        room.depth / 2
+    );
+    leftWallThicknessMesh.receiveShadow = true;
+    meshes.push(leftWallThicknessMesh);
+
+    const backWallThicknessGeometry = new THREE.BoxGeometry(room.width, room.height, wallThickness);
+    const backWallThicknessMesh = new THREE.Mesh(backWallThicknessGeometry, wallMaterial);
+    backWallThicknessMesh.position.set(
+        room.width / 2,
+        room.height / 2,
+        wallThickness / 2
+    );
+    backWallThicknessMesh.receiveShadow = true;
+    meshes.push(backWallThicknessMesh);
 
     return meshes;
 };

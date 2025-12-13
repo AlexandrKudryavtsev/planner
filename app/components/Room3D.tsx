@@ -215,11 +215,10 @@ export default function Room3D({ room, selectedFurniture, onSelectFurniture }: R
   useEffect(() => {
     if (!sceneRef.current || !cameraRef.current) return;
 
-    // Обновляем камеру
-    cameraRef.current.position.set(room.width * 0.5, room.height * 1.5, room.depth * 2);
-    cameraRef.current.lookAt(room.width * 0.5, room.height * 0.5, room.depth * 0.5);
+    cameraRef.current.position.set(room.width * 1.5, room.height * 1.5, room.depth * 1.5);
+    cameraRef.current.lookAt(room.width * 0.3, room.height * 0.5, room.depth * 0.3);
+    controlsRef.current?.update();
 
-    // Обновляем комнату
     recreateRoom();
   }, [room.width, room.depth, room.height]);
 

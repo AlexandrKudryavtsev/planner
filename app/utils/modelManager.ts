@@ -5,7 +5,7 @@ import { createChairModel } from './catalog/chair';
 import { createFallbackModel } from './catalog/fallback';
 import { createModernRadiatorLowPolyModel, createModernRadiatorModel } from './catalog/modernRadiator';
 import { createOldRadiatorLowPolyModel, createOldRadiatorModel } from './catalog/oldRadiator';
-import { createBlackboardLowPolyModel, createBlackboardModel } from './catalog/blackboard';
+import { createBlackboardModel } from './catalog/blackboard';
 
 export interface ModelConfig {
     name: string;
