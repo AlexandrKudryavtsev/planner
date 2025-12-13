@@ -1,12 +1,13 @@
 'use client';
 
 import { Room, Furniture } from '@/types';
+import { MODELS } from '@/utils/modelManager';
 
 interface ControlsPanelProps {
   room: Room;
   selectedFurniture: string | null;
   selectedItem: Furniture | undefined;
-  onAddFurniture: (type: 'cube' | 'rectangular') => void;
+  onAddFurniture: (type: 'cube' | 'rectangular' | 'model', modelType?: string) => void;
   onUpdateFurniture: (id: string, updates: Partial<Furniture>) => void;
   onDeleteFurniture: (id: string) => void;
   onUpdateRoomDimensions: (dimension: 'width' | 'depth' | 'height', value: number) => void;
@@ -21,7 +22,7 @@ export default function ControlsPanel({
   onUpdateRoomDimensions
 }: ControlsPanelProps) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 h-full">
+    <div className="bg-white rounded-xl shadow-lg p-6 h-full overflow-y-auto">
       <h2 className="text-xl font-bold text-gray-800 mb-6">Управление</h2>
 
       <div className="space-y-6">
@@ -54,25 +55,50 @@ export default function ControlsPanel({
 
         <div className="border-t pt-4">
           <h3 className="font-semibold text-gray-700 mb-3">Добавить мебель</h3>
-          <div className="flex space-x-3">
-            <button
-              onClick={() => onAddFurniture('cube')}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              Куб
-            </button>
-            <button
-              onClick={() => onAddFurniture('rectangular')}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              Параллелепипед
-            </button>
+          <div className="mb-4">
+            <h4 className="font-medium text-gray-700 mb-2 text-sm">Простые фигуры</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => onAddFurniture('cube')}
+                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors text-sm"
+              >
+                Куб
+              </button>
+              <button
+                onClick={() => onAddFurniture('rectangular')}
+                className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors text-sm"
+              >
+                Параллелепипед
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="font-medium text-gray-700 mb-2 text-sm">3D Модели</h4>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(MODELS).map(([key, config]) => (
+                <button
+                  key={key}
+                  onClick={() => onAddFurniture('model', key)}
+                  className="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors text-sm"
+                >
+                  {config.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {selectedItem && (
           <div className="border-t pt-4 space-y-4">
-            <h3 className="font-semibold text-gray-700">Редактирование: {selectedItem.name}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-gray-700">Редактирование: {selectedItem.name}</h3>
+              {selectedItem.type === 'model' && (
+                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                  3D Модель
+                </span>
+              )}
+            </div>
 
             <div className="space-y-3">
               <div>
@@ -81,18 +107,23 @@ export default function ControlsPanel({
                   type="text"
                   value={selectedItem.name}
                   onChange={(e) => onUpdateFurniture(selectedItem.id, { name: e.target.value })}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded text-sm"
                 />
               </div>
 
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Цвет</label>
-                <input
-                  type="color"
-                  value={selectedItem.color}
-                  onChange={(e) => onUpdateFurniture(selectedItem.id, { color: e.target.value })}
-                  className="w-full h-10"
-                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={selectedItem.color}
+                    onChange={(e) => onUpdateFurniture(selectedItem.id, { color: e.target.value })}
+                    className="w-10 h-10 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-500">
+                    {selectedItem.type === 'model' ? 'Основной цвет' : 'Цвет объекта'}
+                  </span>
+                </div>
               </div>
 
               <div>
@@ -119,14 +150,14 @@ export default function ControlsPanel({
                     <input
                       type="number"
                       min="10"
-                      max="300"
+                      max={axis === 'x' ? room.width : axis === 'z' ? room.depth : room.height}
                       value={selectedItem.dimensions[axis]}
                       onChange={(e) => {
                         const newDimensions = { ...selectedItem.dimensions };
                         newDimensions[axis] = parseInt(e.target.value) || 10;
                         onUpdateFurniture(selectedItem.id, { dimensions: newDimensions });
                       }}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded text-sm"
                     />
                   </div>
                 ))}
@@ -136,7 +167,7 @@ export default function ControlsPanel({
                 {(['x', 'y', 'z'] as const).map(axis => (
                   <div key={axis}>
                     <label className="block text-sm text-gray-600 mb-1">
-                      Позиция {axis.toUpperCase()}
+                      Позиция {axis.toUpperCase()} (см)
                     </label>
                     <input
                       type="number"
@@ -148,7 +179,7 @@ export default function ControlsPanel({
                         newPosition[axis] = parseInt(e.target.value) || 0;
                         onUpdateFurniture(selectedItem.id, { position: newPosition });
                       }}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded text-sm"
                     />
                   </div>
                 ))}
@@ -156,10 +187,22 @@ export default function ControlsPanel({
 
               <button
                 onClick={() => onDeleteFurniture(selectedItem.id)}
-                className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors"
+                className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition-colors text-sm"
               >
-                Удалить
+                {selectedItem.type === 'model' ? 'Удалить модель' : 'Удалить объект'}
               </button>
+              
+              {selectedItem.type === 'model' && (
+                <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                  <p className="font-medium mb-1">ℹ️ Особенности 3D моделей:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Цвет применяется к основным материалам</li>
+                    <li>Некоторые детали сохраняют оригинальные цвета</li>
+                    <li>Автоматическая детализация (LOD)</li>
+                    <li>Оптимизированная геометрия</li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -168,6 +211,23 @@ export default function ControlsPanel({
           <h3 className="font-semibold text-gray-700 mb-2">Статистика</h3>
           <div className="text-sm text-gray-600 space-y-1">
             <div>Всего объектов: {room.furniture.length}</div>
+            <div>
+              Распределение:
+              <div className="ml-2 mt-1">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  <span>Кубы: {room.furniture.filter(f => f.type === 'cube').length}</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span>Параллелепипеды: {room.furniture.filter(f => f.type === 'rectangular').length}</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                  <span>3D Модели: {room.furniture.filter(f => f.type === 'model').length}</span>
+                </div>
+              </div>
+            </div>
             <div>Выбрано: {selectedItem ? selectedItem.name : 'нет'}</div>
             <div className="text-xs text-gray-500 mt-2">
               Используйте мышь для вращения в 3D виде

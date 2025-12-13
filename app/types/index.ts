@@ -4,14 +4,17 @@ export interface Vector3 {
     z: number;
 }
 
+export type FurnitureType = 'cube' | 'rectangular' | 'model';
+
 export interface Furniture {
     id: string;
     name: string;
-    type: 'cube' | 'rectangular';
+    type: FurnitureType;
     position: Vector3;
-    dimensions: Vector3; // width, height, depth
+    dimensions: Vector3;
     color: string;
     rotation: number; // в градусах
+    modelType?: string; // 'conditioner', 'chair', etc.
 }
 
 export interface Room {

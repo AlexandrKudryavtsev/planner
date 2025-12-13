@@ -1,6 +1,6 @@
-// helpers/three-helpers.ts
 import { Furniture, Room } from '@/types';
 import * as THREE from 'three';
+import { createModelMesh } from '@/utils/modelManager';
 
 /**
  * Создает 3D комнату с полом, стенами и сеткой
@@ -73,12 +73,20 @@ export const createRoomMesh = (room: Room, wallThickness = 5) => {
 };
 
 /**
- * Создает 3D mesh для мебели с возможностью выделения
+ * Создает 3D mesh для мебели с поддержкой моделей
  */
 export const createFurnitureMesh = (
     furniture: Furniture,
     isSelected: boolean
-): THREE.Mesh => {
+): THREE.Object3D => {
+    if (furniture.type === 'model' && furniture.modelType) {
+        const mesh = createModelMesh(furniture, isSelected, false);
+        mesh.traverse((child) => {
+            child.userData = { ...child.userData, furnitureId: furniture.id };
+        });
+        return mesh;
+    }
+
     const geometry = new THREE.BoxGeometry(
         furniture.dimensions.x,
         furniture.dimensions.y,
@@ -92,19 +100,17 @@ export const createFurnitureMesh = (
     });
 
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData = { furnitureId: furniture.id };
 
-    // Мебель стоит на сетке (y = 0 для начала координат мебели)
     mesh.position.set(
         furniture.position.x + furniture.dimensions.x / 2,
-        furniture.dimensions.y / 2, // Центр по высоте находится на половине высоты мебели
+        furniture.dimensions.y / 2,
         furniture.position.z + furniture.dimensions.z / 2
     );
-
     mesh.rotation.y = furniture.rotation * (Math.PI / 180);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    // Добавляем контур для выбранного объекта
     if (isSelected) {
         addSelectionOutline(mesh);
     }
@@ -116,31 +122,34 @@ export const createFurnitureMesh = (
  * Обновляет существующий mesh мебели
  */
 export const updateFurnitureMesh = (
-    mesh: THREE.Mesh,
+    mesh: THREE.Object3D,
     furniture: Furniture,
     isSelected: boolean
 ) => {
-    // Обновляем позицию
-    mesh.position.set(
-        furniture.position.x + furniture.dimensions.x / 2,
-        furniture.dimensions.y / 2, // Центр по высоте
-        furniture.position.z + furniture.dimensions.z / 2
-    );
+    if (furniture.type === 'model') {
+        return; // TODO: Пока просто возвращаем, в реальности нужно пересоздать
+    }
 
-    // Обновляем вращение
-    mesh.rotation.y = furniture.rotation * (Math.PI / 180);
+    if (mesh instanceof THREE.Mesh) {
+        mesh.position.set(
+            furniture.position.x + furniture.dimensions.x / 2,
+            furniture.dimensions.y / 2,
+            furniture.position.z + furniture.dimensions.z / 2
+        );
+        mesh.rotation.y = furniture.rotation * (Math.PI / 180);
 
-    // Обновляем материал (цвет и прозрачность)
-    updateMeshMaterial(mesh, furniture, isSelected);
+        mesh.userData = { ...mesh.userData, furnitureId: furniture.id };
 
-    // Обновляем контур выбора
-    if (isSelected) {
-        const existingLine = mesh.children.find(child => child instanceof THREE.LineSegments);
-        if (!existingLine) {
-            addSelectionOutline(mesh);
+        updateMeshMaterial(mesh, furniture, isSelected);
+
+        if (isSelected) {
+            const existingLine = mesh.children.find(child => child instanceof THREE.LineSegments);
+            if (!existingLine) {
+                addSelectionOutline(mesh);
+            }
+        } else {
+            removeSelectionOutline(mesh);
         }
-    } else {
-        removeSelectionOutline(mesh);
     }
 };
 
@@ -197,24 +206,54 @@ export const updateMeshMaterial = (
 };
 
 /**
- * Правильно удаляет mesh из сцены
+ * Освобождает ресурсы Object3D
  */
-export const disposeMesh = (mesh: THREE.Mesh) => {
-    mesh.geometry.dispose();
+export const disposeObject3D = (object: THREE.Object3D) => {
+    object.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
 
-    if (Array.isArray(mesh.material)) {
-        mesh.material.forEach(m => m.dispose());
-    } else {
-        mesh.material.dispose();
-    }
+            if (Array.isArray(child.material)) {
+                child.material.forEach(m => m.dispose());
+            } else {
+                child.material.dispose();
+            }
+        }
 
-    // Удаляем дочерние объекты (например, контуры выделения)
-    mesh.children.forEach(child => {
         if (child instanceof THREE.LineSegments) {
             child.geometry.dispose();
             (child.material as THREE.Material).dispose();
         }
+
+        if (child instanceof THREE.BoxHelper) {
+            child.geometry.dispose();
+            child.material.dispose();
+        }
     });
+};
+
+/**
+ * Освобождает ресурсы mesh (обратная совместимость)
+ */
+export const disposeMesh = (mesh: THREE.Mesh | THREE.Object3D) => {
+    if (mesh instanceof THREE.Mesh) {
+        mesh.geometry.dispose();
+
+        if (Array.isArray(mesh.material)) {
+            mesh.material.forEach(m => m.dispose());
+        } else {
+            mesh.material.dispose();
+        }
+
+        mesh.children.forEach(child => {
+            if (child instanceof THREE.LineSegments) {
+                child.geometry.dispose();
+                (child.material as THREE.Material).dispose();
+            }
+        });
+    } else {
+        disposeObject3D(mesh);
+    }
 };
 
 /**

@@ -39,12 +39,23 @@ const INITIAL_ROOM: Room = {
         },
         {
             id: '3',
-            name: 'Шкаф',
-            type: 'rectangular',
-            position: { x: 600, y: 0, z: 50 },
-            dimensions: { x: 60, y: 200, z: 120 },
-            color: '#696969',
-            rotation: 90
+            name: 'Кондиционер',
+            type: 'model',
+            modelType: 'conditioner',
+            position: { x: 650, y: 180, z: 50 },
+            dimensions: { x: 90, y: 30, z: 40 },
+            color: '#D3D3D3',
+            rotation: 0
+        },
+        {
+            id: '4',
+            name: 'Стул',
+            type: 'model',
+            modelType: 'chair',
+            position: { x: 350, y: 0, z: 400 },
+            dimensions: { x: 55, y: 50, z: 55 },
+            color: '#9B8C75',
+            rotation: 180
         }
     ]
 };
