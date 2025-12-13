@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Planner",
-  description: "Furniture plannel 3D",
+  description: "Furniture planner 3D",
+  metadataBase: new URL('https://alexandrkudryavtsev.github.io/planner'), // Добавьте эту строку
 };
 
 export default function RootLayout({

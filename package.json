@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "export": "next export",
+    "deploy": "npm run build && npm run export && touch out/.nojekyll && gh-pages -d out",
+    "predeploy": "npm run build"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -26,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "gh-pages": "^6.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
