@@ -3,6 +3,9 @@ import * as THREE from 'three';
 import { createConditionerLowPolyModel, createConditionerModel } from './catalog/conditioner';
 import { createChairLowPolyModel, createChairModel } from './catalog/chair';
 import { createFallbackModel } from './catalog/fallback';
+import { createModernRadiatorLowPolyModel, createModernRadiatorModel } from './catalog/modernRadiator';
+import { createOldRadiatorLowPolyModel, createOldRadiatorModel } from './catalog/oldRadiator';
+import { createBlackboardLowPolyModel, createBlackboardModel } from './catalog/blackboard';
 
 export interface ModelConfig {
     name: string;
@@ -29,6 +32,30 @@ export const MODELS: Record<string, ModelConfig> = {
         height: 50,
         createModel: createChairModel,
         createLowPolyModel: createChairLowPolyModel
+    },
+    modernRadiator: {
+        name: 'Современный радиатор',
+        width: 100,
+        depth: 10,
+        height: 100,
+        createModel: createModernRadiatorModel,
+        createLowPolyModel: createModernRadiatorLowPolyModel
+    },
+    oldRadiator: {
+        name: 'Чугунный радиатор',
+        width: 100,
+        depth: 20,
+        height: 100,
+        createModel: createOldRadiatorModel,
+        createLowPolyModel: createOldRadiatorLowPolyModel
+    },
+    blackboard: {
+        name: 'Классная доска',
+        width: 300,
+        depth: 20,
+        height: 150,
+        createModel: createBlackboardModel,
+        createLowPolyModel: createBlackboardLowPolyModel
     }
 };
 
