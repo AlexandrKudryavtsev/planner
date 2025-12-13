@@ -59,6 +59,14 @@ export const MODELS: Record<string, ModelConfig> = {
     }
 };
 
+export const MODEL_IMAGES: Record<string, string> = {
+    conditioner: '/furniture-preview/air-conditioner.png',
+    chair: '/furniture-preview/chair.png',
+    modernRadiator: '/furniture-preview/modern-radiator.png',
+    oldRadiator: '/furniture-preview/old-radiator.png',
+    blackboard: '/furniture-preview/blackboard.png'
+};
+
 /**
  * Создает 3D модель мебели с LOD
  */
