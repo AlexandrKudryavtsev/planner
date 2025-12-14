@@ -1,4 +1,4 @@
-import { MODEL_IMAGES, MODELS } from "@/utils/modelManager";
+import { MODELS } from "@/utils/modelManager";
 import Image from "next/image";
 import { useState } from "react";
 import { AccordionItem } from "../Accordion";
@@ -69,7 +69,6 @@ function ModelGrid({ models, onSelect }: ModelGridProps) {
             {models.map(([key, config]) => (
                 <ModelCard
                     key={key}
-                    id={key}
                     config={config}
                     onSelect={() => onSelect('model', key)}
                 />
@@ -79,12 +78,11 @@ function ModelGrid({ models, onSelect }: ModelGridProps) {
 }
 
 interface ModelCardProps {
-    id: string;
     config: typeof MODELS[keyof typeof MODELS];
     onSelect: () => void;
 }
 
-function ModelCard({ id, config, onSelect }: ModelCardProps) {
+function ModelCard({ config, onSelect }: ModelCardProps) {
     return (
         <button
             onClick={onSelect}
@@ -92,7 +90,7 @@ function ModelCard({ id, config, onSelect }: ModelCardProps) {
         >
             <div className="aspect-square mb-2 bg-gray-100 rounded-md overflow-hidden">
                 <Image
-                    src={MODEL_IMAGES[id]}
+                    src={config.preview}
                     alt={config.name}
                     width={80}
                     height={80}
@@ -103,7 +101,10 @@ function ModelCard({ id, config, onSelect }: ModelCardProps) {
                 {config.name}
             </span>
             <span className="text-xs text-gray-500 block mt-1">
-                {config.width}×{config.depth}×{config.height} см
+                {config.price}₽
+            </span>
+            <span className="text-xs text-gray-500 block mt-1">
+                {config.width}×{config.height}×{config.depth} см
             </span>
         </button>
     );

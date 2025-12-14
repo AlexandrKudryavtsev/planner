@@ -1,6 +1,5 @@
 import { Furniture } from '@/types';
 import * as THREE from 'three';
-import { createConditionerLowPolyModel, createConditionerModel } from './catalog/conditioner';
 import { createChairModel } from './catalog/chair';
 import { createFallbackModel } from './catalog/fallback';
 import { createModernRadiatorLowPolyModel, createModernRadiatorModel } from './catalog/modernRadiator';
@@ -13,32 +12,29 @@ export interface ModelConfig {
     width: number;
     depth: number;
     height: number;
+    price: number;
+    preview: string;
     createModel: () => THREE.Object3D;
     createLowPolyModel?: () => THREE.Object3D;
 }
 
 export const MODELS: Record<string, ModelConfig> = {
-    conditioner: {
-        name: 'Кондиционер',
-        width: 90,
-        depth: 40,
-        height: 30,
-        createModel: createConditionerModel,
-        createLowPolyModel: createConditionerLowPolyModel
-    },
     chair: {
         name: 'Стул',
         width: 55,
         depth: 55,
-        height: 50,
+        height: 80,
+        price: 2_000,
+        preview: getStaticPath('/furniture-preview/chair.png'),
         createModel: createChairModel,
-        createLowPolyModel: createChairModel, // TODO: createChairLowPolyModel неправильно работает
     },
     modernRadiator: {
         name: 'Современный радиатор',
         width: 100,
         depth: 10,
         height: 100,
+        price: 30_000,
+        preview: getStaticPath('/furniture-preview/modern-radiator.png'),
         createModel: createModernRadiatorModel,
         createLowPolyModel: createModernRadiatorLowPolyModel
     },
@@ -47,6 +43,8 @@ export const MODELS: Record<string, ModelConfig> = {
         width: 100,
         depth: 20,
         height: 100,
+        price: 20_000,
+        preview: getStaticPath('/furniture-preview/old-radiator.png'),
         createModel: createOldRadiatorModel,
         createLowPolyModel: createOldRadiatorLowPolyModel
     },
@@ -55,6 +53,8 @@ export const MODELS: Record<string, ModelConfig> = {
         width: 300,
         depth: 20,
         height: 150,
+        price: 9_000,
+        preview: getStaticPath('/furniture-preview/blackboard.png'),
         createModel: createBlackboardModel,
         createLowPolyModel: createBlackboardModel
     }

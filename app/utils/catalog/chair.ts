@@ -98,7 +98,8 @@ export const createChairModel = (): Object3D => {
     back.position.set(-0.025, 0.03, 0.75);
     chair.add(back);
 
-    chair.rotateX(Math.PI / 2)
+    chair.rotateX(Math.PI / 2);
+    chair.rotateY(Math.PI);
 
     return chair;
 }
@@ -160,6 +161,7 @@ export const createChairLowPolyModel = (): Object3D => {
     chair.add(back);
 
     chair.rotateX(Math.PI / 2)
+    chair.rotateY(Math.PI);
 
     return chair;
 }

@@ -1,6 +1,6 @@
 import { Furniture, Room } from "@/types";
 import { AccordionItem } from "../Accordion";
-import { MODEL_IMAGES } from "@/utils/modelManager";
+import { MODELS } from "@/utils/modelManager";
 import Image from "next/image";
 
 interface FurnitureEditorProps {
@@ -67,10 +67,10 @@ function FurnitureHeader({ item }: { item: Furniture }) {
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-                {item.type === 'model' && MODEL_IMAGES[item.modelType!] && (
+                {item.type === 'model' && MODELS[item.modelType!].preview && (
                     <div className="relative w-12 h-12 rounded-md overflow-hidden">
                         <Image
-                            src={MODEL_IMAGES[item.modelType!]}
+                            src={MODELS[item.modelType!].preview}
                             alt={item.name}
                             width={48}
                             height={48}
