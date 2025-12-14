@@ -9,7 +9,7 @@ interface RoomSettingsProps {
 
 export function RoomSettings({ room, onUpdateRoomDimensions }: RoomSettingsProps) {
     return (
-        <AccordionItem title="Настройка комнаты" defaultOpen>
+        <AccordionItem title="Настройка комнаты">
             <div className="space-y-4">
                 <div className="flex items-center gap-2 text-gray-600 mb-3">
                     <Ruler className="w-4 h-4" />

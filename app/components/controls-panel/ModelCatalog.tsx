@@ -6,16 +6,27 @@ import { Search } from "lucide-react";
 
 interface ModelCatalogProps {
     onAddFurniture: (type: 'cube' | 'rectangular' | 'model', modelType?: string) => void;
+    isOpen?: boolean;
+    onToggle?: () => void;
 }
 
-export function ModelCatalog({ onAddFurniture }: ModelCatalogProps) {
+export function ModelCatalog({ onAddFurniture, isOpen, onToggle }: ModelCatalogProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const filteredModels = Object.entries(MODELS).filter(([_, config]) =>
         config.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleModelSelect = (type: 'cube' | 'rectangular' | 'model', modelType?: string) => {
+        onAddFurniture(type, modelType);
+        setSearchQuery('');
+    };
+
     return (
-        <AccordionItem title="Каталог моделей">
+        <AccordionItem
+            title="Каталог моделей"
+            isOpen={isOpen}
+            onToggle={onToggle}
+        >
             <div className="space-y-4">
                 <SearchInput
                     value={searchQuery}
@@ -23,7 +34,10 @@ export function ModelCatalog({ onAddFurniture }: ModelCatalogProps) {
                     placeholder="Поиск моделей..."
                 />
 
-                <ModelGrid models={filteredModels} onSelect={onAddFurniture} />
+                <ModelGrid
+                    models={filteredModels}
+                    onSelect={handleModelSelect}
+                />
             </div>
         </AccordionItem>
     );

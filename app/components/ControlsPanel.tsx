@@ -30,6 +30,7 @@ export default function ControlsPanel({
   onViewModeChange
 }: ControlsPanelProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isModelCatalogOpen, setIsModelCatalogOpen] = useState(false);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -53,6 +54,11 @@ export default function ControlsPanel({
     }
   }, [selectedItem, onDeleteFurniture]);
 
+  const handleAddFurniture = useCallback((type: 'cube' | 'rectangular' | 'model', modelType?: string) => {
+    onAddFurniture(type, modelType);
+    setIsModelCatalogOpen(false);
+  }, [onAddFurniture]);
+
   return (
     <div className="bg-white h-full overflow-y-auto border-r border-gray-200 shadow-lg">
       <Header
@@ -63,13 +69,6 @@ export default function ControlsPanel({
       />
 
       <div className="space-y-2">
-        <RoomSettings
-          room={room}
-          onUpdateRoomDimensions={onUpdateRoomDimensions}
-        />
-
-        <ModelCatalog onAddFurniture={onAddFurniture} />
-
         {selectedItem && (
           <FurnitureEditor
             item={selectedItem}
@@ -78,6 +77,15 @@ export default function ControlsPanel({
             onDelete={handleDeleteFurniture}
           />
         )}
+        <ModelCatalog
+          onAddFurniture={handleAddFurniture}
+          isOpen={isModelCatalogOpen}
+          onToggle={() => setIsModelCatalogOpen(!isModelCatalogOpen)}
+        />
+        <RoomSettings
+          room={room}
+          onUpdateRoomDimensions={onUpdateRoomDimensions}
+        />
       </div>
     </div>
   );

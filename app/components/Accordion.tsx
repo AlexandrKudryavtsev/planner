@@ -6,16 +6,28 @@ interface AccordionItemProps {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
-export function AccordionItem({ title, children, defaultOpen = false }: AccordionItemProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+export function AccordionItem({ title, children, defaultOpen = false, isOpen: controlledIsOpen, onToggle }: AccordionItemProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen);
+  
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  
+  const handleToggle = () => {
+    if (onToggle) {
+      onToggle();
+    } else {
+      setInternalIsOpen(!isOpen);
+    }
+  };
 
   return (
     <div className="border-b border-gray-200 last:border-b-0">
       <button
         className="flex justify-between items-center w-full p-4 text-left hover:bg-gray-50 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
       >
         <span className="font-semibold text-gray-700">{title}</span>
         <svg
@@ -35,3 +47,4 @@ export function AccordionItem({ title, children, defaultOpen = false }: Accordio
     </div>
   );
 }
+

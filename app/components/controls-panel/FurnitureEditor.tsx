@@ -12,7 +12,7 @@ interface FurnitureEditorProps {
 
 export function FurnitureEditor({ item, room, onUpdate, onDelete }: FurnitureEditorProps) {
     return (
-        <AccordionItem title="Редактирование элемента" defaultOpen>
+        <AccordionItem title={item.name} defaultOpen>
             <div className="space-y-4">
                 <FurnitureHeader item={item} />
 
