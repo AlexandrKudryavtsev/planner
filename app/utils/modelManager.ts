@@ -6,6 +6,7 @@ import { createFallbackModel } from './catalog/fallback';
 import { createModernRadiatorLowPolyModel, createModernRadiatorModel } from './catalog/modernRadiator';
 import { createOldRadiatorLowPolyModel, createOldRadiatorModel } from './catalog/oldRadiator';
 import { createBlackboardModel } from './catalog/blackboard';
+import { getStaticPath } from './path';
 
 export interface ModelConfig {
     name: string;
@@ -60,11 +61,11 @@ export const MODELS: Record<string, ModelConfig> = {
 };
 
 export const MODEL_IMAGES: Record<string, string> = {
-    conditioner: '/furniture-preview/air-conditioner.png',
-    chair: '/furniture-preview/chair.png',
-    modernRadiator: '/furniture-preview/modern-radiator.png',
-    oldRadiator: '/furniture-preview/old-radiator.png',
-    blackboard: '/furniture-preview/blackboard.png'
+    conditioner: getStaticPath('/furniture-preview/air-conditioner.png'),
+    chair: getStaticPath('/furniture-preview/chair.png'),
+    modernRadiator: getStaticPath('/furniture-preview/modern-radiator.png'),
+    oldRadiator: getStaticPath('/furniture-preview/old-radiator.png'),
+    blackboard: getStaticPath('/furniture-preview/blackboard.png')
 };
 
 /**
