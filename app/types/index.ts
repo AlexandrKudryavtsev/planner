@@ -25,3 +25,19 @@ export interface Room {
 }
 
 export type ViewMode = '3d' | 'top';
+
+export interface OrderItem {
+    id: string;
+    name: string;
+    type: FurnitureType;
+    modelType?: string;
+    price?: number;
+    dimensions: Vector3;
+}
+
+export interface OrderRequest {
+    name: string;
+    phone: string;
+    items: OrderItem[];
+    totalPrice: number;
+}
