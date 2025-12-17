@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Room3D from '@/components/Room3D';
 import TopView from '@/components/TopView';
 import ControlsPanel from '@/components/ControlsPanel';
+import { HelpPanel } from '@/components/HelpPanel';
 import { ViewMode } from '@/types';
 import { useFurniture } from '@/hooks/useFurniture';
 import { useRoom } from '@/hooks/useRoom';
@@ -39,7 +40,8 @@ export default function Home() {
           />
         </div>
 
-        <div className="flex-1 bg-white overflow-hidden">
+        <div className="flex-1 bg-white overflow-hidden relative">
+          <HelpPanel viewMode={viewMode} />
           {viewMode === '3d' ? (
             <Room3D
               room={room}
